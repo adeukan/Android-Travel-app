@@ -7,17 +7,17 @@
     android:paddingTop="5dp">
 
     <ImageView
-        android:id="@+id/itemPicture"
+        android:id="@+id/progPhoto"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:contentDescription="@string/frame_image"
-        app:srcCompat="@drawable/attraction"
+        app:srcCompat="@drawable/ic_square"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />
 
     <TextView
-        android:id="@+id/itemName"
+        android:id="@+id/poiName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="16dp"
@@ -25,7 +25,7 @@
         android:text="@string/poi_name"
         android:textSize="24sp"
         android:layout_centerVertical="true"
-        android:layout_toRightOf="@+id/itemPicture"
-        android:layout_toEndOf="@+id/itemPicture" />
+        android:layout_toRightOf="@+id/progPhoto"
+        android:layout_toEndOf="@+id/progPhoto" />
 </RelativeLayout>
 

@@ -9,15 +9,9 @@ public class Poi implements Parcelable {
     private float lat;
     private float lon;
     private String name;
-    private String category;
+    private String tourism;
 
-    public Poi(String id, float lat, float lon, String name, String category) {
-        this.id = id;
-        this.lat = lat;
-        this.lon = lon;
-        this.name = name;
-        this.category = category;
-    }
+    public Poi() {}
 
     public String getId() {
         return id;
@@ -51,16 +45,15 @@ public class Poi implements Parcelable {
         this.name = name;
     }
 
-    public String getCategory() {
-        return category;
+    public String getTourism() {
+        return tourism;
     }
 
-    public void setCategory(String category) {
-        this.category = category;
+    public void setTourism(String tourism) {
+        this.tourism = tourism;
     }
 
-
-    // generated code to make objects parcelable ---------------------------------------------------
+    // parcelable plugin ---------------------------------------------------------------------------
     @Override
     public int describeContents() {
         return 0;
@@ -72,7 +65,7 @@ public class Poi implements Parcelable {
         dest.writeFloat(this.lat);
         dest.writeFloat(this.lon);
         dest.writeString(this.name);
-        dest.writeString(this.category);
+        dest.writeString(this.tourism);
     }
 
     protected Poi(Parcel in) {
@@ -80,10 +73,10 @@ public class Poi implements Parcelable {
         this.lat = in.readFloat();
         this.lon = in.readFloat();
         this.name = in.readString();
-        this.category = in.readString();
+        this.tourism = in.readString();
     }
 
-    public static final Parcelable.Creator<Poi> CREATOR = new Parcelable.Creator<Poi>() {
+    public static final Creator<Poi> CREATOR = new Creator<Poi>() {
         @Override
         public Poi createFromParcel(Parcel source) {
             return new Poi(source);
