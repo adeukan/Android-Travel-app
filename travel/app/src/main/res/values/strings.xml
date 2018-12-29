@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Traveler</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="pois">POIs</string>
+    <string name="header_background">Header Background</string>
+    <string name="filters">Filters</string>
+
+    <!--fixing the render problem with TextInputLayout elements-->
+    <item name="visible" type="id" />
+    <item name="masked" type="id" />
+    <string name="title_activity_settings">SettingsActivity</string>
+    <string name="json_settings_key">JSON</string>
+    <string name="json_settings_title">JSON</string>
+    <string name="frame_image">FrameImage</string>
+    <string name="poi_name">POI Name</string>
+    <string name="settings">Settings</string>
+    <string name="info_window_picture">Info Window Picture</string>
+    <string name="snippet">Snippet</string>
+
+</resources>
