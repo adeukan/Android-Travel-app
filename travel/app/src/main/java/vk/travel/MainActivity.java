@@ -1,13 +1,9 @@
 package vk.travel;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
+
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -19,13 +15,25 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+import com.google.gson.Gson;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import vk.travel.model.Poi;
-import vk.travel.services.MyIntentService;
-import vk.travel.utils.NetworkChecker;
+
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -34,22 +42,9 @@ public class MainActivity extends AppCompatActivity
     public static final String SOURCE_FOLDER = "http://192.168.1.5/travel/";
     // full URL to JSON file
     public static final String JSON_URL = SOURCE_FOLDER + "dublin_pois.json";
-
     // list of POIs (used by the adapter to display in RecyclerView)
-    List<Poi> mPoiList;
+    List<Poi> mPoiList = new ArrayList<>();
 
-    // receiver for local broadcast messages from MyIntentService (IntentService)
-    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            // get the response array of parcelable Poi objects from the intent using the key
-            Poi[] pois = (Poi[]) intent.getParcelableArrayExtra(MyIntentService.BROADCAST_CONTENT);
-            // create new List based on the received array, because the adapter works with a List
-            mPoiList = new ArrayList<>(Arrays.asList(pois));
-            // call method to display pois in RecyclerView without filtering
-            displayPOIs(null);
-        }
-    };
 
     // ---------------------------------------------------------------------------------------------
     @Override
@@ -75,35 +70,71 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // makeRequest() is called from onResume()
+        // request queue
+        RequestQueue queue = Volley.newRequestQueue(this);
 
-        // register the broadcast receiver to get messages from MyIntentService
-        // only broadcast with specified Intent object will be accepted
-        LocalBroadcastManager.getInstance(getApplicationContext())
-                .registerReceiver(mBroadcastReceiver,
-                        new IntentFilter(MyIntentService.BROADCAST));
-    }
+        // create request object that requires an array response from the provided URL
+        JsonArrayRequest request = new JsonArrayRequest(JSON_URL,
+                // when response array is received
+                new Response.Listener<JSONArray>() {
+                    @Override
+                    public void onResponse(JSONArray jsonArray) {
+                        try {
+                            // for each JSON object in response
+                            for (int i = 0; i != jsonArray.length(); i++) {
+                                // get next JSON object
+                                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                // parse the JSON object and create Poi object
+                                String id = jsonObject.getString("id");
+                                float lat = BigDecimal.valueOf(jsonObject.getDouble("lat")).floatValue();
+                                float lon = BigDecimal.valueOf(jsonObject.getDouble("lon")).floatValue();
+                                String name;
+                                if(jsonObject.has("name")) {
+                                    name = jsonObject.getString("name");
+                                } else {
+                                    name = jsonObject.getString("tourism");
+                                    name = name.substring(0, 1).toUpperCase() + name.substring(1);
+                                }
+                                String category = jsonObject.getString("tourism");
+                                Poi poi = new Poi(id, lat, lon, name, category);
+                                // add Poi object to the list
+                                mPoiList.add(poi);
+                            }
+                            // display the list of POIs on the screen
+                            displayPOIs(null);
+                        }
+                        catch (JSONException ex) {
+                            Toast.makeText(MainActivity.this, "Parsing Error!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(MainActivity.this, "Web Response Error!", Toast.LENGTH_LONG).show();
+                    }
+                }); // end of request definition
 
-    // making the Web request ----------------------------------------------------------------------
-    protected void makeRequest() {
 
-        // check network connection state
-        boolean networkState = NetworkChecker.hasNetworkAccess(this);
+//        // the same request but using Gson
+//        StringRequest request = new StringRequest(JSON_URL, new Response.Listener<String>() {
+//            @Override
+//            public void onResponse(String response) {
+//                Gson gson = new Gson();
+//                Poi[] POIsArray = gson.fromJson(response, Poi[].class);
+//                mPoiList = new ArrayList<>(Arrays.asList(POIsArray));
+//                displayPOIs(null);
+//            }
+//        }, new Response.ErrorListener() {
+//            @Override
+//            public void onErrorResponse(VolleyError error) {
+//                Toast.makeText(MainActivity.this, "Web Response Error!", Toast.LENGTH_LONG).show();
+//            }
+//        });
 
-        // if connected
-        if (networkState) {
-            // create Intent object for starting MyIntentService
-            Intent intent = new Intent(this, MyIntentService.class);
-            // wrap URL string to URI object and attach to intent
-            intent.setData(Uri.parse(JSON_URL));
-            // MyIntentService is used to get the data from the Web in the background, and broadcast the result
-            startService(intent);
-        }
-        // if not connected
-        else {
-            // display the Toast message
-            Toast.makeText(this, "Network is not available", Toast.LENGTH_SHORT).show();
-        }
+
+        // add the request to the RequestQueue
+        queue.add(request);
     }
 
     // display the list of POIs in RecyclerView ----------------------------------------------------
@@ -141,13 +172,10 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setAdapter(new PoiAdapter(this, filteredList));
     }
 
-
-
     // handle a filtering item click in drawer menu ------------------------------------------------
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-
         int id = item.getItemId();
         switch (id) {
             case R.id.a:
@@ -190,22 +218,10 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    // called when the activity become active ------------------------------------------------------
-    @Override
-    protected void onResume() {
-        super.onResume();
-        // make request to the Web and return the response data
-        makeRequest();
-        // after the data is returned, the broadcast receiver calls displayPOIs()
-    }
-
-
     // handle the Menu item click (on the top right) -----------------------------------------------
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-
         int id = item.getItemId();
-
         // if the Settings item was clicked
         if (id == R.id.settings) {
             // move to settings activity

@@ -46,7 +46,7 @@ class PoiAdapter extends RecyclerView.Adapter<PoiAdapter.ViewHolder> {
         try {
             // if POI doesn't have name, take it from its tourism category
             if(poi.getName().equals("")){
-                poi.setName(poi.getTourism());
+                poi.setName(poi.getCategory());
             }
 
             // attach the POI name to the TextView

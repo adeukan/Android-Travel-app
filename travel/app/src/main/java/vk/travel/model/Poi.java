@@ -1,17 +1,20 @@
 package vk.travel.model;
 
-import android.os.Parcel;
-import android.os.Parcelable;
-
-public class Poi implements Parcelable {
+public class Poi {
 
     private String id;
     private float lat;
     private float lon;
     private String name;
-    private String tourism;
+    private String category;
 
-    public Poi() {}
+    public Poi(String id, float lat, float lon, String name, String category) {
+        this.id = id;
+        this.lat = lat;
+        this.lon = lon;
+        this.name = name;
+        this.category = category;
+    }
 
     public String getId() {
         return id;
@@ -45,47 +48,47 @@ public class Poi implements Parcelable {
         this.name = name;
     }
 
-    public String getTourism() {
-        return tourism;
+    public String getCategory() {
+        return category;
     }
 
-    public void setTourism(String tourism) {
-        this.tourism = tourism;
+    public void setCategory(String category) {
+        this.category = category;
     }
 
-    // parcelable plugin ---------------------------------------------------------------------------
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(this.id);
-        dest.writeFloat(this.lat);
-        dest.writeFloat(this.lon);
-        dest.writeString(this.name);
-        dest.writeString(this.tourism);
-    }
-
-    protected Poi(Parcel in) {
-        this.id = in.readString();
-        this.lat = in.readFloat();
-        this.lon = in.readFloat();
-        this.name = in.readString();
-        this.tourism = in.readString();
-    }
-
-    public static final Creator<Poi> CREATOR = new Creator<Poi>() {
-        @Override
-        public Poi createFromParcel(Parcel source) {
-            return new Poi(source);
-        }
-
-        @Override
-        public Poi[] newArray(int size) {
-            return new Poi[size];
-        }
-    };
+//    // parcelable plugin ---------------------------------------------------------------------------
+//    @Override
+//    public int describeContents() {
+//        return 0;
+//    }
+//
+//    @Override
+//    public void writeToParcel(Parcel dest, int flags) {
+//        dest.writeString(this.id);
+//        dest.writeFloat(this.lat);
+//        dest.writeFloat(this.lon);
+//        dest.writeString(this.name);
+//        dest.writeString(this.category);
+//    }
+//
+//    protected Poi(Parcel in) {
+//        this.id = in.readString();
+//        this.lat = in.readFloat();
+//        this.lon = in.readFloat();
+//        this.name = in.readString();
+//        this.category = in.readString();
+//    }
+//
+//    public static final Creator<Poi> CREATOR = new Creator<Poi>() {
+//        @Override
+//        public Poi createFromParcel(Parcel source) {
+//            return new Poi(source);
+//        }
+//
+//        @Override
+//        public Poi[] newArray(int size) {
+//            return new Poi[size];
+//        }
+//    };
 }
 
