@@ -11,7 +11,7 @@
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:contentDescription="@string/frame_image"
-        app:srcCompat="@drawable/ic_square"
+        app:srcCompat="@drawable/attraction"
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true" />

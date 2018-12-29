@@ -1,7 +1,6 @@
 package vk.travel;
 
 import android.app.Dialog;
-import android.location.Address;
 import android.location.Geocoder;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -33,19 +32,19 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
     Float mPoiLon;
     String mPoiName;
     String mPoiCategory;
-    private int mPoiPicture;
+    private int mPoiPicID;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_detail_with_map);
+        setContentView(R.layout.activity_detail);
 
         // check the status of Google Play Services
         if (servicesOK()) {
             if (mMap == null) {
                 // map initialization
-                ((SupportMapFragment) Objects.requireNonNull(getSupportFragmentManager().findFragmentById(R.id.mapFragment)))
+                ((SupportMapFragment) Objects.requireNonNull(getSupportFragmentManager().findFragmentById(R.id.map_fragment_detail_activity)))
                         .getMapAsync(this);
             }
         }
@@ -53,11 +52,10 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         // get values transferred into activity 
         Bundle extras = getIntent().getExtras();
         assert extras != null;
-        mPoiLat = extras.getFloat(PoiAdapter.EXTRA_LAT);
-        mPoiLon = extras.getFloat(PoiAdapter.EXTRA_LON);
-        mPoiName = extras.getString(PoiAdapter.EXTRA_NAME);
-        String temp = extras.getString(PoiAdapter.EXTRA_CATEGORY);
-        mPoiCategory = temp.substring(0,1).toUpperCase() + temp.substring(1);
+        mPoiLat = extras.getFloat(PoiListAdapter.KEY_LAT);
+        mPoiLon = extras.getFloat(PoiListAdapter.KEY_LON);
+        mPoiName = extras.getString(PoiListAdapter.KEY_NAME);
+        mPoiCategory = extras.getString(PoiListAdapter.KEY_CATEGORY);
 
         // set the header in action bar
         setTitle(mPoiName);
@@ -65,15 +63,16 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         // set text views
         TextView tvPoiName = findViewById(R.id.name);
         tvPoiName.setText(mPoiName);
+
         TextView tvPoiCategory = findViewById(R.id.category);
-        tvPoiCategory.setText(mPoiCategory);
+        String categoryUpperCase = mPoiCategory.substring(0,1).toUpperCase() + mPoiCategory.substring(1);
+        tvPoiCategory.setText(categoryUpperCase);
+
         TextView tvDescription = findViewById(R.id.description);
         tvDescription.setText("No description at the moment\n");
 
-        // TEMP PICTURE for all POIs
-        mPoiCategory = "ic_pool";
         // find the image in the resource folder whose name corresponds to 'image' property
-        mPoiPicture = getResources().getIdentifier(
+        mPoiPicID = getResources().getIdentifier(
                 mPoiCategory, "drawable", getPackageName());
     }
 
@@ -111,7 +110,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
                 @Override
                 public View getInfoContents(Marker marker) {
                     // info window layout
-                    View v = getLayoutInflater().inflate(R.layout.info_window, null);
+                    View v = getLayoutInflater().inflate(R.layout.info_win, null);
                     // references to info window elements 
                     TextView tvPoiName = v.findViewById(R.id.infoName);
                     TextView tvCategory = v.findViewById(R.id.infoCategory);
@@ -119,7 +118,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
                     // add info
                     tvPoiName.setText(marker.getTitle());
                     tvCategory.setText(marker.getSnippet());
-                    ivPicture.setImageResource(mPoiPicture);
+                    ivPicture.setImageResource(mPoiPicID);
                     // return View
                     return v;
                 }
@@ -144,10 +143,13 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
             // move the map
             CameraUpdate update = CameraUpdateFactory.newLatLngZoom(latLong, 15);
             mMap.moveCamera(update);
+
+            String categoryUpperCase = mPoiCategory.substring(0,1).toUpperCase() + mPoiCategory.substring(1);
+
             // marker options
             MarkerOptions options = new MarkerOptions()
                     .title(mPoiName)
-                    .snippet(mPoiCategory)
+                    .snippet(categoryUpperCase)
                     .anchor(.5f, .5f)
                     .position(new LatLng(mPoiLat, mPoiLon));
             // add marker on map
