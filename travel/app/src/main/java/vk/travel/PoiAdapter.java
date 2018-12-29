@@ -1,6 +1,8 @@
 package vk.travel;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +20,11 @@ class PoiAdapter extends RecyclerView.Adapter<PoiAdapter.ViewHolder> {
     private List<Poi> mPoiList;
     // MainActivity context
     private Context mContext;
+    // used to identify the information attached to intent object
+    static final String EXTRA_LAT = "lat";
+    static final String EXTRA_LON = "lon";
+    static final String EXTRA_NAME = "name";
+    static final String EXTRA_CATEGORY = "category";
 
     PoiAdapter(Context context, List<Poi> poiList) {
         this.mContext = context;
@@ -70,6 +77,22 @@ class PoiAdapter extends RecyclerView.Adapter<PoiAdapter.ViewHolder> {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        // click handler for current item in the list with moving to DetailActivity
+        holder.mListItem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mContext, DetailActivity.class);
+                // create bundle of values to attach both LAT & LON to intent
+                Bundle extras = new Bundle();
+                extras.putFloat(EXTRA_LAT, poi.getLat());
+                extras.putFloat(EXTRA_LON, poi.getLon());
+                extras.putString(EXTRA_NAME, poi.getName());
+                extras.putString(EXTRA_CATEGORY, poi.getCategory());
+                intent.putExtras(extras);
+                mContext.startActivity(intent);
+            }
+        });
     }
 
     // get the size of the list of POIs ------------------------------------------------------------
@@ -91,8 +114,8 @@ class PoiAdapter extends RecyclerView.Adapter<PoiAdapter.ViewHolder> {
         ViewHolder(View itemView) {
             super(itemView);
 
-            mName = itemView.findViewById(R.id.poiName);
-            mPhoto = itemView.findViewById(R.id.progPhoto);
+            mName = itemView.findViewById(R.id.itemName);
+            mPhoto = itemView.findViewById(R.id.itemPicture);
             mListItem = itemView;
         }
     }

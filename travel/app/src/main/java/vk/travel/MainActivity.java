@@ -1,7 +1,6 @@
 package vk.travel;
 
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -19,9 +18,7 @@ import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
-import com.google.gson.Gson;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -29,7 +26,6 @@ import org.json.JSONObject;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import vk.travel.model.Poi;
@@ -101,7 +97,7 @@ public class MainActivity extends AppCompatActivity
                                 mPoiList.add(poi);
                             }
                             // display the list of POIs on the screen
-                            displayPOIs(null);
+                            displayPoiList(null);
                         }
                         catch (JSONException ex) {
                             Toast.makeText(MainActivity.this, "Parsing Error!", Toast.LENGTH_LONG).show();
@@ -123,7 +119,7 @@ public class MainActivity extends AppCompatActivity
 //                Gson gson = new Gson();
 //                Poi[] POIsArray = gson.fromJson(response, Poi[].class);
 //                mPoiList = new ArrayList<>(Arrays.asList(POIsArray));
-//                displayPOIs(null);
+//                displayPoiList(null);
 //            }
 //        }, new Response.ErrorListener() {
 //            @Override
@@ -138,7 +134,7 @@ public class MainActivity extends AppCompatActivity
     }
 
     // display the list of POIs in RecyclerView ----------------------------------------------------
-    protected void displayPOIs(String filter) {
+    protected void displayPoiList(String filter) {
 
         // create a copy of POI list
         List<Poi> filteredList = new ArrayList<>(mPoiList);
@@ -179,19 +175,19 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         switch (id) {
             case R.id.a:
-                displayPOIs("a");
+                displayPoiList("a");
                 break;
             case R.id.b:
-                displayPOIs("b");
+                displayPoiList("b");
                 break;
             case R.id.c:
-                displayPOIs("c");
+                displayPoiList("c");
                 break;
             case R.id.d:
-                displayPOIs("e");
+                displayPoiList("e");
                 break;
             case R.id.e:
-                displayPOIs(null);
+                displayPoiList(null);
                 break;
         }
         // close drawer menu
@@ -225,8 +221,6 @@ public class MainActivity extends AppCompatActivity
         // if the Settings item was clicked
         if (id == R.id.settings) {
             // move to settings activity
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
             return true;
         }
         return super.onOptionsItemSelected(item);
