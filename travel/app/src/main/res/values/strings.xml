@@ -20,8 +20,10 @@
     <string name="info_window_picture">Info Window Picture</string>
     <string name="snippet">Snippet</string>
     <string name="search_label">Location:</string>
-    <string name="search">Search</string>
     <string name="find_me">Find Me</string>
     <string name="list">LIST</string>
+    <string name="list_view">List</string>
+    <string name="action_map">Map</string>
+    <string name="action_list">List View</string>
 
 </resources>

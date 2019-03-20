@@ -22,144 +22,110 @@ import java.util.List;
 
 class Model {
     @SuppressLint("StaticFieldLeak")
-    private static Model mInstance = null;          // Model instance
-    private Context mCtx;
-    private RequestQueue mQueue;                    // request queue
-    List<Poi> mModelPoiList;                        // result list of POIs
+    private static Model mInstance = null;                                                          // Model instance
 
-    private float mZoomLevel;
+    private static final String START_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/json?";
+    private static final String API_KEY = "&key=AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs";
     private static final int EQUATOR = 40075000;
 
-    // query URL parts
+    List<Poi> mPoiList;                                                                             // result list of POIs
+    LatLng mLatLng;
+    private List<Poi> mPoiListPortion;                                                              // next portion of POIs
+    private RequestQueue mRequestQueue;                                                             // request queue
     private String mNextPageToken = null;
-    private static final String START_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?";
-    private static final String API_KEY = "&key=AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs";
-    String mQuery;
+    private float mZoomLevel;
+    private Context mCtx;
 
-    // getting the Model instance
-    static synchronized Model getInstance(Context ctx) {
+
+    private Model(Context ctx) {                                                                    // Model constructor
+        mCtx = ctx;
+        mRequestQueue = Volley.newRequestQueue(ctx);
+        mPoiListPortion = new ArrayList<>();
+        mPoiList = new ArrayList<>();
+    }
+
+    static synchronized Model getInstance(Context ctx) {                                            // getting Model instance
         if (mInstance == null) {
             mInstance = new Model(ctx);
         }
         return mInstance;
     }
 
-    // constructor
-    private Model(Context ctx) {
-        mCtx = ctx;
-        mQueue = Volley.newRequestQueue(ctx);
-        mModelPoiList = new ArrayList<>();
-    }
+    // REQUEST POIS --------------------------------------------------------------------------------
+    void requestPOIs(final PoisListener listenerCtx, LatLng latLng) {
 
-    public float getmZoomLevel() {
-        return mZoomLevel;
-    }
-    public void setmZoomLevel(float mZoomLevel) {
-        this.mZoomLevel = mZoomLevel;
-    }
+        mLatLng = latLng;                                                                           // used in fragment to get last request location
 
-    // implemented by ListActivity and MapActivity
-    public interface PoisListener {
-        void updatePois(List<Poi> list, boolean loading) throws IOException;
-    }
+        // updatePois() of PoisListener interface is triggered after request is finished
+        // 'listener_ctx' is a calling fragment with PoisListener interface implemented
 
-    private boolean findPoiByPlaceId(String placeId) {
-        boolean found = false;
-        for (Poi poi: mModelPoiList) {
-            if (poi.getPlace_id().equals(placeId)) {
-                found = true;
-                break;
-            }
-        }
-        return found;
-    }
-
-    // getting the POIs
-    // this method gets a context indicating the activity with implemented PoisListener interface
-    // the method updatePois() of PoisListener interface is used after the request done
-    void requestPOIs(final PoisListener listener, LatLng latLng) {
-
-        // calculate the radius based on new zoom level
-        double numTiles = Math.pow(2, mZoomLevel);
-        double metersPerTile = Math.cos(Math.toRadians(latLng.latitude)) * EQUATOR / numTiles;
-        double radius = metersPerTile/1.5;
-
-        if(radius > 50000) radius = 50000;      // max available radius
-
-        double lat = latLng.latitude;
+        double lat = latLng.latitude;                                                               // request coordinates
         double lng = latLng.longitude;
 
-        mQuery = "location=" + lat + "," + lng + "&radius=" + radius + "&type=point_of_interest&query=point+of+interest";
+        double numTiles = Math.pow(2, mZoomLevel);                                                  // calculate radius based on zoom level
+        double metersPerTile = Math.cos(Math.toRadians(latLng.latitude)) * EQUATOR / numTiles;
+        int diameter = (int) Math.round(metersPerTile);
+        int radius = diameter;                                                                      // double the search radius to get more results
+        if (radius > 50000)
+            radius = 50000;                                                                         // max available radius
 
-        // determine the type of request and generate request URL
-        String url = "";
+        String query = "location=" + lat + "," + lng                                                // part of request url
+                + "&radius=" + radius
+                + "&type=point_of_interest";
+
+        String url = "";                                                                            // generate request url
         if (mNextPageToken == null)
-            url = START_URL.concat(mQuery).concat(API_KEY);
-        else if (mNextPageToken != null)
+            url = START_URL.concat(query).concat(API_KEY);
+        else
             url = START_URL.concat("pagetoken=").concat(mNextPageToken).concat(API_KEY);
 
-        // request
-        JsonObjectRequest request = new JsonObjectRequest
+        JsonObjectRequest request = new JsonObjectRequest                                           // create GET request
                 (Request.Method.GET, url, null,
-
-                        // when response object is received
-                        new Response.Listener<JSONObject>() {
+                        new Response.Listener<JSONObject>() {                                       // response listener
                             @Override
                             public void onResponse(JSONObject response) {
 
                                 try {
-                                    // save the pagetoken value for next time
-                                    boolean loading;
+                                    boolean nextPage;
                                     if (response.has("next_page_token")) {
-
-                                        mNextPageToken = response.getString("next_page_token");
-                                        // track the reaching the bottom in ListActivity
-                                        loading = true;
-                                    }
-                                    else {
+                                        mNextPageToken = response.getString("next_page_token");// save NextPageToken for next request
+                                        nextPage = true;                                             // track reaching the bottom of the list
+                                    } else {
                                         mNextPageToken = null;
-                                        // stop tracking the reaching the bottom in ListActivity
-                                        loading = false;
+                                        nextPage = false;                                           // stop tracking reaching the bottom of the list
                                     }
 
-                                    // get results from the response object
-                                    JSONArray results = response.getJSONArray("results");
+                                    JSONArray results = response.getJSONArray("results");     // get results from the response object
 
-                                    // for each JSON object in results
-                                    for (int i = 0; i != results.length(); i++) {
-                                        // get next JSON object
-                                        JSONObject jsonObject = results.getJSONObject(i);
+                                    for (int i = 0; i != results.length(); i++) {                   // for each JSON object in results
+                                        JSONObject jsonObject = results.getJSONObject(i);           // get next JSON object
 
-                                        // get the photo reference or skip this object
                                         JSONArray photos;
-                                        if (jsonObject.has("photos"))
+                                        if (jsonObject.has("photos"))                         // get the photo reference or skip this object
                                             photos = jsonObject.getJSONArray("photos");
                                         else
-                                            continue;  // skip objects without photo
+                                            continue;
 
-                                        // parse the JSON object and create Poi object
-                                        String place_id = jsonObject.getString("place_id");
-                                        if (!findPoiByPlaceId(place_id)) {
-                                            String name = jsonObject.getString("name");
+                                        String id = jsonObject.getString("place_id");         // get the ID of the next place found
+                                        if (!findPoiByPlaceId(id)) {                                // skip place if already in the list
+                                            String name = jsonObject.getString("name");       // parse JSON object
                                             JSONObject geometry = jsonObject.getJSONObject("geometry");
-                                            String formatted_address = jsonObject.getString("formatted_address");
+                                            // String address = jsonObject.getString("formatted_address");
                                             JSONArray types = jsonObject.getJSONArray("types");
                                             String icon = jsonObject.getString("icon");
 
-                                            // create and add Poi object to the list
-                                            Poi poi = new Poi(place_id, name, geometry, formatted_address, types, photos, icon);
-                                            mModelPoiList.add(poi);
+                                            Poi poi = new Poi(id, name, geometry, types, photos, icon);
+                                            mPoiListPortion.add(poi);                               // save POI in the list
                                         }
+                                    }                                                               // end of parsing
+
+                                    try {
+                                        listenerCtx.updatePois(mPoiListPortion, nextPage);          // call updatePois() of calling fragment
+                                        mPoiListPortion.clear();                                    // clear list before next use
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
                                     }
 
-                                    // send the result to updatePois() method of the calling activity
-                                    if (listener != null) {
-                                        try {
-                                            listener.updatePois(mModelPoiList, loading);
-                                        } catch (IOException e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
                                 } catch (JSONException ex) {
                                     ex.printStackTrace();
                                 }
@@ -172,7 +138,29 @@ class Model {
                             }
                         });
 
-        // add the request to the RequestQueue
-        mQueue.add(request);
+        mRequestQueue.add(request);                                                                 // add the request to queue
+    }
+
+    // FIND DUPLICATES -----------------------------------------------------------------------------
+    private boolean findPoiByPlaceId(String placeId) {
+        boolean found = false;
+        for (Poi poi : mPoiListPortion) {
+            if (poi.getPlace_id().equals(placeId)) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
+
+    float getmZoomLevel() {
+        return mZoomLevel;
+    }
+    void setmZoomLevel(float mZoomLevel) {
+        this.mZoomLevel = mZoomLevel;
+    }
+
+    public interface PoisListener {                                                                 // implemented by FragmentList and FragmentMap
+        void updatePois(List<Poi> list, boolean loading) throws IOException;
     }
 }

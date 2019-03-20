@@ -24,7 +24,7 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import java.io.IOException;
 import java.util.Objects;
 
-public class DetailActivity extends AppCompatActivity implements OnMapReadyCallback {
+public class ActivityDetail extends AppCompatActivity implements OnMapReadyCallback {
 
     private static final int ERROR_DIALOG_REQUEST = 911;
     GoogleMap mMap;
@@ -52,10 +52,10 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
         // get values transferred into activity 
         Bundle extras = getIntent().getExtras();
         assert extras != null;
-        mPoiLat = extras.getFloat(PoiListAdapter.KEY_LAT);
-        mPoiLon = extras.getFloat(PoiListAdapter.KEY_LON);
-        mPoiName = extras.getString(PoiListAdapter.KEY_NAME);
-        mPoiCategory = extras.getString(PoiListAdapter.KEY_CATEGORY);
+        mPoiLat = extras.getFloat(AdapterPoiList.KEY_LAT);
+        mPoiLon = extras.getFloat(AdapterPoiList.KEY_LON);
+        mPoiName = extras.getString(AdapterPoiList.KEY_NAME);
+        mPoiCategory = extras.getString(AdapterPoiList.KEY_CATEGORY);
 
         // set the header in action bar
         setTitle(mPoiName);
@@ -110,7 +110,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
                 @Override
                 public View getInfoContents(Marker marker) {
                     // info window layout
-                    View v = getLayoutInflater().inflate(R.layout.info_win, null);
+                    View v = getLayoutInflater().inflate(R.layout.marker_info_win, null);
                     // references to info window elements 
                     TextView tvPoiName = v.findViewById(R.id.infoName);
                     TextView tvCategory = v.findViewById(R.id.infoCategory);

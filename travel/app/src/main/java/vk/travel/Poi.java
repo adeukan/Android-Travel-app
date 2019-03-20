@@ -8,16 +8,14 @@ public class Poi {
     private String place_id;
     private String name;
     private JSONObject geometry;
-    private String formatted_address;
     private JSONArray types;
     private JSONArray photos;
     private String icon;
 
-    public Poi(String place_id, String name, JSONObject geometry, String formatted_address, JSONArray types, JSONArray photos, String icon) {
+    public Poi(String place_id, String name, JSONObject geometry, JSONArray types, JSONArray photos, String icon) {
         this.place_id = place_id;
         this.name = name;
         this.geometry = geometry;
-        this.formatted_address = formatted_address;
         this.types = types;
         this.photos = photos;
         this.icon = icon;
@@ -45,15 +43,6 @@ public class Poi {
 
     public void setGeometry(JSONObject geometry) {
         this.geometry = geometry;
-    }
-
-    public String getFormatted_address() {
-        return formatted_address;
-    }
-
-
-    public void setFormatted_address(String formatted_address) {
-        this.formatted_address = formatted_address;
     }
 
     public JSONArray getTypes() {

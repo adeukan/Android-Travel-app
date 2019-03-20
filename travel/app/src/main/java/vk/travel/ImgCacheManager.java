@@ -12,7 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class ImageCacheManager {
+public class ImgCacheManager {
 
     // try to get a programmer photo from the cache ------------------------------------------------
     public static Bitmap getPhotoFromCache(Context context, Poi poi) throws JSONException {

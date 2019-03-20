@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,79 +19,67 @@ import java.io.InputStream;
 import java.net.URL;
 import java.util.List;
 
-class PoiListAdapter extends RecyclerView.Adapter<PoiListAdapter.ViewHolder> {
+class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
 
     // list of POIs
     private List<Poi> mPoiList;
-    // MainActivity context
-    private Context mContext;
+    // ActivityMain context
+    private Context mCtx;
     // used to identify the information attached to intent object
     static final String KEY_LAT = "lat";
     static final String KEY_LON = "lon";
     static final String KEY_NAME = "name";
     static final String KEY_CATEGORY = "category";
 
-    PoiListAdapter(Context context, List<Poi> poiList) {
-        this.mContext = context;
+    AdapterPoiList(Context context, List<Poi> poiList) {
+        this.mCtx = context;
         this.mPoiList = poiList;
     }
 
-    // create a View element for a POI inside ViewGroup(RecyclerView)-------------------------------
+    // CREATE LIST ITEM ----------------------------------------------------------------------------
     @Override
-    public PoiListAdapter.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // create inflater
-        LayoutInflater inflater = LayoutInflater.from(mContext);
-        // inflate the list element layout
-        View poiView = inflater.inflate(R.layout.list_item, parent, false);
-        // return ViewHolder object to onBindViewHolder() method
-        // ViewHolder object contains the View element and the references to its widgets
-        return new ViewHolder(poiView);
+    public AdapterPoiList.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+
+        LayoutInflater inflater = LayoutInflater.from(mCtx);                                    // create inflater
+        View poiView = inflater.inflate(R.layout.list_item, parent, false);              // inflate list items with layout
+        return new ViewHolder(poiView);                                                             // return ViewHolder object to onBindViewHolder() method
+                                                                                                    // it contains list item and references to its views
     }
 
-    // add content to each widget inside current View element --------------------------------------
+    // ADD CONTENT TO LIST ITEM --------------------------------------------------------------------
     @Override
-    public void onBindViewHolder(PoiListAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(AdapterPoiList.ViewHolder holder, int position) {
 
-        // get the next POI from the list based on its position
-        final Poi poi = mPoiList.get(position);
-
+        final Poi poi = mPoiList.get(position);                                                     // get POI for next list item
         try {
-
-            // attach the POI name to the TextView
-            holder.mName.setText(poi.getName());
-
-            // try to get the Poi photo from the cache
-            Bitmap bitmap = ImageCacheManager.getPhotoFromCache(mContext, poi);
-
-            // if the photo is not found in the cache, start download task in the background
-            if (bitmap == null) {
-                // asyncTask object gets the holder to use its reference to attach the photo to ImageView
-                DownloadPhotoTask asyncTask = new DownloadPhotoTask(holder);
-                // start background process to download poi photo and attach it to ImageView
-                asyncTask.execute(poi);
+            holder.mName.setText(poi.getName());                                                    // attach POI name to list item
+            Bitmap bitmap = ImgCacheManager.getPhotoFromCache(mCtx, poi);                       // try to get POI photo from cache
+            if (bitmap == null) {                                                                   // if not found, start background downloading
+                DownloadPhotoTask asyncTask = new DownloadPhotoTask(holder);                        // new asyncTask needs the item holder
+                asyncTask.execute(poi);                                                             // download poi photo and attach using the holder
             }
-            // if the photo is already in the cache
-            else {
-                // attach poi photo to ImageView
-                holder.mPhoto.setImageBitmap(bitmap);
-            }
+            else                                                                                    // if photo is already in the cache
+                holder.mPhoto.setImageBitmap(bitmap);                                               // attach it to the item using the holder
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        // click handler for current item in the list with moving to DetailActivity
-        holder.mListItem.setOnClickListener(new View.OnClickListener() {
+        holder.mListItem.setOnClickListener(new View.OnClickListener() {                            // set item onclick listener
             @Override
             public void onClick(View v) {
-//                Intent intent = new Intent(mContext, DetailActivity.class);
-//                // create bundle of values to attach both LAT & LON to intent
-//                Bundle extras = new Bundle();
-//                extras.putFloat(KEY_LAT, poi.getLat());
-//                extras.putFloat(KEY_LON, poi.getLon());
-//                extras.putString(KEY_NAME, poi.getName());
-//                extras.putString(KEY_CATEGORY, poi.getCategory());
-//                intent.putExtras(extras);
-//                mContext.startActivity(intent);
+                FragmentTransaction ft = ((ActivityMain) mCtx).getSupportFragmentManager().beginTransaction();
+                ft.replace(R.id.fragment_container, new FragmentDetail());
+                ft.commit();
+
+               // Intent intent = new Intent(mCtx, ActivityDetail.class);
+               // // create bundle of values to attach both LAT & LON to intent
+               // Bundle extras = new Bundle();
+               // extras.putFloat(KEY_LAT, poi.getLat());
+               // extras.putFloat(KEY_LON, poi.getLon());
+               // extras.putString(KEY_NAME, poi.getName());
+               // extras.putString(KEY_CATEGORY, poi.getCategory());
+               // intent.putExtras(extras);
+               // mCtx.startActivity(intent);
             }
         });
     }
@@ -193,7 +182,7 @@ class PoiListAdapter extends RecyclerView.Adapter<PoiListAdapter.ViewHolder> {
             mHolder.mPhoto.setImageBitmap(bitmap);
             // store the photo in the cache
             try {
-                ImageCacheManager.putPhotoToCache(mContext, mPoi, bitmap);
+                ImgCacheManager.putPhotoToCache(mCtx, mPoi, bitmap);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
