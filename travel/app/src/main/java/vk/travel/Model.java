@@ -10,27 +10,31 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 class Model {
-
     @SuppressLint("StaticFieldLeak")
-    private static Model mInstance = null;      // Model instance
+    private static Model mInstance = null;          // Model instance
     private Context mCtx;
-    private RequestQueue mQueue;                // request queue
-    private List<Poi> mPoiList;                 // result list of POIs
+    private RequestQueue mQueue;                    // request queue
+    List<Poi> mModelPoiList;                        // result list of POIs
+
+    private float mZoomLevel;
+    private static final int EQUATOR = 40075000;
 
     // query URL parts
     private String mNextPageToken = null;
     private static final String START_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?";
-    private static final String QUERY = "query=dublin+point+of+interest&type=point_of_interest&region=.ie&language=en";
     private static final String API_KEY = "&key=AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs";
+    String mQuery;
 
     // getting the Model instance
     static synchronized Model getInstance(Context ctx) {
@@ -44,24 +48,54 @@ class Model {
     private Model(Context ctx) {
         mCtx = ctx;
         mQueue = Volley.newRequestQueue(ctx);
-        mPoiList = new ArrayList<>();
+        mModelPoiList = new ArrayList<>();
+    }
+
+    public float getmZoomLevel() {
+        return mZoomLevel;
+    }
+    public void setmZoomLevel(float mZoomLevel) {
+        this.mZoomLevel = mZoomLevel;
     }
 
     // implemented by ListActivity and MapActivity
     public interface PoisListener {
-        void listUpdated(List<Poi> list, boolean loading);
+        void updatePois(List<Poi> list, boolean loading) throws IOException;
+    }
+
+    private boolean findPoiByPlaceId(String placeId) {
+        boolean found = false;
+        for (Poi poi: mModelPoiList) {
+            if (poi.getPlace_id().equals(placeId)) {
+                found = true;
+                break;
+            }
+        }
+        return found;
     }
 
     // getting the POIs
     // this method gets a context indicating the activity with implemented PoisListener interface
-    // the method listUpdated() of PoisListener interface is used after the request done
-    void requestPOIs(final PoisListener listener) {
+    // the method updatePois() of PoisListener interface is used after the request done
+    void requestPOIs(final PoisListener listener, LatLng latLng) {
+
+        // calculate the radius based on new zoom level
+        double numTiles = Math.pow(2, mZoomLevel);
+        double metersPerTile = Math.cos(Math.toRadians(latLng.latitude)) * EQUATOR / numTiles;
+        double radius = metersPerTile/1.5;
+
+        if(radius > 50000) radius = 50000;      // max available radius
+
+        double lat = latLng.latitude;
+        double lng = latLng.longitude;
+
+        mQuery = "location=" + lat + "," + lng + "&radius=" + radius + "&type=point_of_interest&query=point+of+interest";
 
         // determine the type of request and generate request URL
-        String url;
+        String url = "";
         if (mNextPageToken == null)
-            url = START_URL.concat(QUERY).concat(API_KEY);
-        else
+            url = START_URL.concat(mQuery).concat(API_KEY);
+        else if (mNextPageToken != null)
             url = START_URL.concat("pagetoken=").concat(mNextPageToken).concat(API_KEY);
 
         // request
@@ -105,20 +139,26 @@ class Model {
 
                                         // parse the JSON object and create Poi object
                                         String place_id = jsonObject.getString("place_id");
-                                        String name = jsonObject.getString("name");
-                                        JSONObject geometry = jsonObject.getJSONObject("geometry");
-                                        String formatted_address = jsonObject.getString("formatted_address");
-                                        JSONArray types = jsonObject.getJSONArray("types");
-                                        String icon = jsonObject.getString("icon");
+                                        if (!findPoiByPlaceId(place_id)) {
+                                            String name = jsonObject.getString("name");
+                                            JSONObject geometry = jsonObject.getJSONObject("geometry");
+                                            String formatted_address = jsonObject.getString("formatted_address");
+                                            JSONArray types = jsonObject.getJSONArray("types");
+                                            String icon = jsonObject.getString("icon");
 
-                                        // create and add Poi object to the list
-                                        Poi poi = new Poi(place_id, name, geometry, formatted_address, types, photos, icon);
-                                        mPoiList.add(poi);
+                                            // create and add Poi object to the list
+                                            Poi poi = new Poi(place_id, name, geometry, formatted_address, types, photos, icon);
+                                            mModelPoiList.add(poi);
+                                        }
                                     }
 
-                                    // send the result to listUpdated() method of the calling activity
+                                    // send the result to updatePois() method of the calling activity
                                     if (listener != null) {
-                                        listener.listUpdated(mPoiList, loading);
+                                        try {
+                                            listener.updatePois(mModelPoiList, loading);
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
                                     }
                                 } catch (JSONException ex) {
                                     ex.printStackTrace();

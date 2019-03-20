@@ -1,19 +1,55 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:orientation="vertical"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="vk.travel.MainActivity">
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin">
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/search_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/search_label"
+            android:textSize="20sp" />
+
+        <EditText
+            android:id="@+id/search_window"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/search_label"
+            android:layout_toStartOf="@+id/search_button"
+            android:layout_toEndOf="@+id/search_label"
+            android:ems="10"
+            android:inputType="textCapWords"
+            android:textColorLink="@color/colorAccent">
+
+            <requestFocus />
+        </EditText>
+
+        <Button
+            android:id="@+id/search_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/search_label"
+            android:layout_alignParentEnd="true"
+            android:onClick="moveToSearchLocation"
+            android:text="@string/search"/>
+    </RelativeLayout>
+
 
     <fragment xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/map_fragment_map_activity"
+        android:id="@+id/map_fragment"
         android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp"
-        android:layout_alignParentStart="true"/>
+        android:layout_height="fill_parent" />
 
-</RelativeLayout>
+</LinearLayout>

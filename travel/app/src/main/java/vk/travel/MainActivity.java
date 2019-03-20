@@ -7,6 +7,9 @@ import android.view.View;
 
 
 public class MainActivity extends AppCompatActivity {
+
+    public static final String CALLING_ACTIVITY = "activity";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -14,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     }
     public void goToList(View v) {
         Intent intent = new Intent(this, ListActivity.class);
+        intent.putExtra(CALLING_ACTIVITY, "MainActivity");
         startActivity(intent);
     }
     public void goToMap(View v) {

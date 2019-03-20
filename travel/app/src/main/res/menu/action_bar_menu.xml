@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/goto_list"
+        android:title="@string/list"
+        app:showAsAction="always"
+        android:onClick="switchToListActivity"/>
+
+    <item android:id="@+id/current_location"
+        android:title="@string/find_me"
+        app:showAsAction="ifRoom"
+        android:onClick="moveToCurrentLocation"/>
+
+</menu>

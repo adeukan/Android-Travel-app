@@ -19,5 +19,9 @@
     <string name="settings">Settings</string>
     <string name="info_window_picture">Info Window Picture</string>
     <string name="snippet">Snippet</string>
+    <string name="search_label">Location:</string>
+    <string name="search">Search</string>
+    <string name="find_me">Find Me</string>
+    <string name="list">LIST</string>
 
 </resources>

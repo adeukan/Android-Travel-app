@@ -1,0 +1,2 @@
+Search location functionality
+Finding current location
