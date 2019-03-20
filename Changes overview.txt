@@ -1,0 +1,11 @@
+Full transfer from OpenStreetMap to Google Places API
+
+A simple request for Dublin POIs
+NextPageToken not used
+Response processing (parsing)
+Adding markers to the map
+Customization of the marker information window 
+
+RecyclerView.Adapter is used to display the list of POIs with photos
+AsyncTask for lazy downloading of POI photos
+Photos are saved to cache

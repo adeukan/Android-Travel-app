@@ -114,7 +114,7 @@ public class DetailActivity extends AppCompatActivity implements OnMapReadyCallb
                     // references to info window elements 
                     TextView tvPoiName = v.findViewById(R.id.infoName);
                     TextView tvCategory = v.findViewById(R.id.infoCategory);
-                    ImageView ivPicture = v.findViewById(R.id.infoPicture);
+                    ImageView ivPicture = v.findViewById(R.id.infoIcon);
                     // add info
                     tvPoiName.setText(marker.getTitle());
                     tvCategory.setText(marker.getSnippet());

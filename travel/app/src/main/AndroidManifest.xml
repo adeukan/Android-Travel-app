@@ -30,7 +30,7 @@
         <activity android:name=".ListActivity" />
 
         <meta-data android:name="com.google.android.maps.v2.API_KEY"
-            android:value="YOUR GOOGLE API KEY"/>
+            android:value="AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs"/>
 
         <meta-data android:name="com.google.android.gms.version"
             android:value="@integer/google_play_services_version"/>

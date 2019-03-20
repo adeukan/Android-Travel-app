@@ -1,8 +1,9 @@
 package vk.travel;
 
 import android.content.Context;
-import android.content.Intent;
-import android.os.Bundle;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,9 +11,12 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.List;
+import org.json.JSONException;
 
-import vk.travel.model.Poi;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.util.List;
 
 class PoiListAdapter extends RecyclerView.Adapter<PoiListAdapter.ViewHolder> {
 
@@ -51,35 +55,25 @@ class PoiListAdapter extends RecyclerView.Adapter<PoiListAdapter.ViewHolder> {
         final Poi poi = mPoiList.get(position);
 
         try {
-            // if POI doesn't have name, take it from its tourism category
-            if(poi.getName().equals("")){
-                poi.setName(poi.getCategory());
-            }
 
             // attach the POI name to the TextView
             holder.mName.setText(poi.getName());
 
-            // find the image in the resource folder whose name corresponds to 'image' property
-            int poiPicID = mContext.getResources().getIdentifier(
-                    poi.getCategory(), "drawable", mContext.getPackageName());
-            holder.mPhoto.setImageResource(poiPicID);
+            // try to get the Poi photo from the cache
+            Bitmap bitmap = ImageCacheManager.getPhotoFromCache(mContext, poi);
 
-
-//            // try to get the POI photo from the cache
-//            Bitmap bitmap = ImageCacheManager.getPhotoFromCache(mContext, poi);
-//
-//            // if the photo is not found in the cache, start download task in the background
-//            if (bitmap == null) {
-//                // asyncTask object gets the holder to use its reference to attach the photo to ImageView
-//                DownloadPhotoTask asyncTask = new DownloadPhotoTask(holder);
-//                // start background process to download POI photo and attach it to ImageView
-//                asyncTask.execute(poi);
-//            }
-//            // if the photo is already in the cache
-//            else {
-//                // attach POI photo to ImageView
-//                holder.mPhoto.setImageBitmap(bitmap);
-//            }
+            // if the photo is not found in the cache, start download task in the background
+            if (bitmap == null) {
+                // asyncTask object gets the holder to use its reference to attach the photo to ImageView
+                DownloadPhotoTask asyncTask = new DownloadPhotoTask(holder);
+                // start background process to download poi photo and attach it to ImageView
+                asyncTask.execute(poi);
+            }
+            // if the photo is already in the cache
+            else {
+                // attach poi photo to ImageView
+                holder.mPhoto.setImageBitmap(bitmap);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -88,15 +82,15 @@ class PoiListAdapter extends RecyclerView.Adapter<PoiListAdapter.ViewHolder> {
         holder.mListItem.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(mContext, DetailActivity.class);
-                // create bundle of values to attach both LAT & LON to intent
-                Bundle extras = new Bundle();
-                extras.putFloat(KEY_LAT, poi.getLat());
-                extras.putFloat(KEY_LON, poi.getLon());
-                extras.putString(KEY_NAME, poi.getName());
-                extras.putString(KEY_CATEGORY, poi.getCategory());
-                intent.putExtras(extras);
-                mContext.startActivity(intent);
+//                Intent intent = new Intent(mContext, DetailActivity.class);
+//                // create bundle of values to attach both LAT & LON to intent
+//                Bundle extras = new Bundle();
+//                extras.putFloat(KEY_LAT, poi.getLat());
+//                extras.putFloat(KEY_LON, poi.getLon());
+//                extras.putString(KEY_NAME, poi.getName());
+//                extras.putString(KEY_CATEGORY, poi.getCategory());
+//                intent.putExtras(extras);
+//                mContext.startActivity(intent);
             }
         });
     }
@@ -126,69 +120,84 @@ class PoiListAdapter extends RecyclerView.Adapter<PoiListAdapter.ViewHolder> {
         }
     }
 
-//    // member class, used to download an image from the Web in the background ----------------------
-//    private class DownloadPhotoTask extends AsyncTask<Poi, Void, Bitmap> {
-//
-//        // Generic Declaration Types:
-//        // Poi - input data type
-//        // Void - no additional data is used during the background process
-//        // Bitmap - output data
-//
-//        // POI whose photo should be downloaded
-//        private Poi mPoi;
-//        // holder with View object and references to View widgets
-//        private ViewHolder mHolder;
-//
-//        // new object gets the holder to use its reference to attach the photo to ImageView
-//        // POI object is received at the time of execution the task
-//        DownloadPhotoTask(ViewHolder holder) {
-//            this.mPoi = null;
-//            this.mHolder = holder;
-//        }
-//
-//        // background thread to download the photo from the Web
-//        @Override
-//        protected Bitmap doInBackground(Poi... pois) {
-//
-//            // the method gets arguments as an array
-//            mPoi = pois[0];
-//
-//            // construct URL String to the POI photo on the Web server
-//            String photoUrl = MainActivity.PHOTO_BASE_URL + mPoi.getPhoto();
-//
-//            // declare input stream outside the try/catch block
-//            InputStream inputStream = null;
-//
-//            try {
-//                // get URL content as input stream
-//                inputStream = (InputStream) new URL(photoUrl).getContent();
-//                // decode stream to a Bitmap object and return it to onPostExecute()
-//                return BitmapFactory.decodeStream(inputStream);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            } finally {
-//                try {
-//                    if (inputStream != null) {
-//                        // close input stream to avoid leaks
-//                        inputStream.close();
-//                    }
-//                } catch (IOException e) {
-//                    e.printStackTrace();
-//                }
-//            }
-//            // if image doesn't exist on the Web server, return null to onPostExecute()
-//            return null;
-//        }
-//
-//        // use holder object to attach the photo to ImageView, and store it in the cache
-//        @Override
-//        protected void onPostExecute(Bitmap bitmap) {
-//            super.onPostExecute(bitmap);
-//            // attach the photo to ImageView
-//            mHolder.mPhoto.setImageBitmap(bitmap);
-//            // store the photo in the cache
-//            ImageCacheManager.putPhotoToCache(mContext, mPoi, bitmap);
-//        }
-//    }
+    // member class, used to download an image from the Web in the background ----------------------
+    private class DownloadPhotoTask extends AsyncTask<Poi, Void, Bitmap> {
+
+        // Generic Declaration Types:
+        // Poi - input data type
+        // Void - no additional data is used during the background process
+        // Bitmap - output data
+
+        // POI whose photo should be downloaded
+        private Poi mPoi;
+        // holder with View object and references to View widgets
+        private ViewHolder mHolder;
+        private String mPhotoURL;
+
+        // new object gets the holder to use its reference to attach the photo to ImageView
+        // POI object is received at the time of execution the task
+        DownloadPhotoTask(ViewHolder holder) {
+            this.mPoi = null;
+            this.mHolder = holder;
+            this.mPhotoURL = null;
+        }
+
+        // background thread to download the photo from the Web
+        @Override
+        protected Bitmap doInBackground(Poi... pois) {
+
+            // the method gets arguments as an array
+            mPoi = pois[0];
+
+
+            // construct URL String to the POI photo on the Web server
+            if(mPoi.getPhotos() != null) {
+                try {
+                    mPhotoURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=300&photoreference="
+                            + mPoi.getPhotos().getJSONObject(0).getString("photo_reference")
+                            + "&key=AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs";
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // declare input stream outside the try/catch block
+            InputStream inputStream = null;
+
+            try {
+                // get URL content as input stream
+                inputStream = (InputStream) new URL(mPhotoURL).getContent();
+                // decode stream to a Bitmap object and return it to onPostExecute()
+                return BitmapFactory.decodeStream(inputStream);
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (inputStream != null) {
+                        // close input stream to avoid leaks
+                        inputStream.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            // if image doesn't exist on the Web server, return null to onPostExecute()
+            return null;
+        }
+
+        // use holder object to attach the photo to ImageView, and store it in the cache
+        @Override
+        protected void onPostExecute(Bitmap bitmap) {
+            super.onPostExecute(bitmap);
+            // attach the photo to ImageView
+            mHolder.mPhoto.setImageBitmap(bitmap);
+            // store the photo in the cache
+            try {
+                ImageCacheManager.putPhotoToCache(mContext, mPoi, bitmap);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
 
 }
