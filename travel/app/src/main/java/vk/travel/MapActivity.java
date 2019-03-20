@@ -55,7 +55,7 @@ public class MapActivity extends AppCompatActivity implements OnMapReadyCallback
 
     // triggered after the POIs request is finished (belongs to Model.PoisListener interface)
     @Override
-    public void listUpdated(List<Poi> list) {
+    public void listUpdated(List<Poi> list, boolean loading) {
         mPoiList = list;
 
         // check the status of Google Play Services

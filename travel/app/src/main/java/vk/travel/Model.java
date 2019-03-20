@@ -21,15 +21,18 @@ import java.util.List;
 class Model {
 
     @SuppressLint("StaticFieldLeak")
-    private static Model mInstance = null;
+    private static Model mInstance = null;      // Model instance
     private Context mCtx;
-    private RequestQueue mQueue;
-    private List<Poi> mPoiList;
-    private String mNextPageToken;
-    private static final String mURL =
-            "https://maps.googleapis.com/maps/api/place/textsearch/json?query=dublin+point+of+interest&type=point_of_interest&region=.ie&language=en&key=AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs";
+    private RequestQueue mQueue;                // request queue
+    private List<Poi> mPoiList;                 // result list of POIs
 
+    // query URL parts
+    private String mNextPageToken = null;
+    private static final String START_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json?";
+    private static final String QUERY = "query=dublin+point+of+interest&type=point_of_interest&region=.ie&language=en";
+    private static final String API_KEY = "&key=AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs";
 
+    // getting the Model instance
     static synchronized Model getInstance(Context ctx) {
         if (mInstance == null) {
             mInstance = new Model(ctx);
@@ -46,17 +49,21 @@ class Model {
 
     // implemented by ListActivity and MapActivity
     public interface PoisListener {
-        void listUpdated(List<Poi> list);
+        void listUpdated(List<Poi> list, boolean loading);
     }
 
     // getting the POIs
     // this method gets a context indicating the activity with implemented PoisListener interface
     // the method listUpdated() of PoisListener interface is used after the request done
     void requestPOIs(final PoisListener listener) {
-        String url = mURL;
-        if (mNextPageToken != null) {
-            // append token to URL
-        }
+
+        // determine the type of request and generate request URL
+        String url;
+        if (mNextPageToken == null)
+            url = START_URL.concat(QUERY).concat(API_KEY);
+        else
+            url = START_URL.concat("pagetoken=").concat(mNextPageToken).concat(API_KEY);
+
         // request
         JsonObjectRequest request = new JsonObjectRequest
                 (Request.Method.GET, url, null,
@@ -67,13 +74,25 @@ class Model {
                             public void onResponse(JSONObject response) {
 
                                 try {
-                                    mNextPageToken = response.getString("next_page_token");
+                                    // save the pagetoken value for next time
+                                    boolean loading;
+                                    if (response.has("next_page_token")) {
+
+                                        mNextPageToken = response.getString("next_page_token");
+                                        // track the reaching the bottom in ListActivity
+                                        loading = true;
+                                    }
+                                    else {
+                                        mNextPageToken = null;
+                                        // stop tracking the reaching the bottom in ListActivity
+                                        loading = false;
+                                    }
+
                                     // get results from the response object
                                     JSONArray results = response.getJSONArray("results");
 
                                     // for each JSON object in results
                                     for (int i = 0; i != results.length(); i++) {
-
                                         // get next JSON object
                                         JSONObject jsonObject = results.getJSONObject(i);
 
@@ -82,7 +101,7 @@ class Model {
                                         if (jsonObject.has("photos"))
                                             photos = jsonObject.getJSONArray("photos");
                                         else
-                                            continue;
+                                            continue;  // skip objects without photo
 
                                         // parse the JSON object and create Poi object
                                         String place_id = jsonObject.getString("place_id");
@@ -99,7 +118,7 @@ class Model {
 
                                     // send the result to listUpdated() method of the calling activity
                                     if (listener != null) {
-                                        listener.listUpdated(mPoiList);
+                                        listener.listUpdated(mPoiList, loading);
                                     }
                                 } catch (JSONException ex) {
                                     ex.printStackTrace();
