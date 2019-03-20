@@ -26,11 +26,6 @@ class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
     private List<Poi> mPoiList;
     // ActivityMain context
     private Context mCtx;
-    // used to identify the information attached to intent object
-    static final String KEY_LAT = "lat";
-    static final String KEY_LON = "lon";
-    static final String KEY_NAME = "name";
-    static final String KEY_CATEGORY = "category";
 
     AdapterPoiList(Context context, List<Poi> poiList) {
         this.mCtx = context;
@@ -42,8 +37,8 @@ class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
     @Override
     public AdapterPoiList.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
-        LayoutInflater inflater = LayoutInflater.from(mCtx);                                    // create inflater
-        View poiView = inflater.inflate(R.layout.list_item, parent, false);              // inflate element with layout
+        LayoutInflater inflater = LayoutInflater.from(mCtx);                                        // create inflater
+        View poiView = inflater.inflate(R.layout.list_item, parent, false);                         // inflate element with layout
         return new ViewHolder(poiView);                                                             // return to onBindViewHolder() wrapped in ViewHolder
                                                                                                     // ViewHolder contains references to element widgets
     }
@@ -56,7 +51,7 @@ class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
         try {
             holder.mName.setText(poi.getName());                                                    // attach POI name to the element
 
-            Bitmap bitmap = ManagerImageCache.getPhotoFromCache(mCtx, poi);                     // try to get POI photo from cache
+            Bitmap bitmap = ManagerImageCache.getPhotoFromCache(mCtx, poi);                         // try to get POI photo from cache
             if (bitmap == null) {                                                                   // if not found in cache, download it in background
                 DownloadPhotoTask asyncTask = new DownloadPhotoTask(holder);                        // asyncTask needs holder to attach photo to element
                 asyncTask.execute(poi);                                                             // download POI photo and attach to element
