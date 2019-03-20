@@ -107,7 +107,9 @@ class Model {
                                             continue;
 
                                         String id = jsonObject.getString("place_id");         // get the ID of the next place found
-                                        if (!findPoiByPlaceId(id)) {                                // skip place if already in the list
+
+                                        Tuple tuple = findPoiByPlaceId(id);                         // check if the place is already in the list
+                                        if(tuple.getPoi() == null) {                                // skip place if already in the list
                                             String name = jsonObject.getString("name");       // parse JSON object
                                             JSONObject geometry = jsonObject.getJSONObject("geometry");
                                             // String address = jsonObject.getString("formatted_address");
@@ -141,17 +143,113 @@ class Model {
         mRequestQueue.add(request);                                                                 // add the request to queue
     }
 
+    // REQUEST POI DETAILS -------------------------------------------------------------------------
+    void requestPoiDetail(final PoiDetailListener listenerCtx, final String poiID) {
+
+        String url = "https://maps.googleapis.com/maps/api/place/details/json?placeid="
+                + poiID
+                + API_KEY;
+
+        JsonObjectRequest request = new JsonObjectRequest                                           // create GET request
+                (Request.Method.GET, url, null,
+                        new Response.Listener<JSONObject>() {                                       // response listener
+                            @Override
+                            public void onResponse(JSONObject responseObj) {
+
+                                JSONObject resultObj = null;                                        // get result object from response object
+                                try {
+                                    resultObj = responseObj.getJSONObject("result");
+
+                                    String address = null;
+                                    if(resultObj.has("formatted_address"))
+                                        address = resultObj.getString("formatted_address");
+
+                                    String phone = null;
+                                    if(resultObj.has("international_phone_number"))
+                                        phone = resultObj.getString("international_phone_number");
+
+                                    String url = null;
+                                    if(resultObj.has("url"))
+                                        url = resultObj.getString("url");
+
+                                    String web = null;
+                                    if(resultObj.has("website"))
+                                        web = resultObj.getString("website");
+
+                                    Double rating = null;
+                                    if(resultObj.has("rating"))
+                                        rating = resultObj.getDouble("rating");
+
+                                    JSONArray photos = null;
+                                    if(resultObj.has("photos"))
+                                            photos = resultObj.getJSONArray("photos"); // get array of photos
+
+                                    JSONArray reviews = null;
+                                    if(resultObj.has("reviews"))
+                                        reviews = resultObj.getJSONArray("reviews");
+
+                                    JSONArray schedule = null;
+                                    if(resultObj.has("opening_hours"))
+                                        schedule = resultObj.getJSONObject("opening_hours").getJSONArray("weekday_text");
+
+                                    Tuple tuple = findPoiByPlaceId(poiID);
+                                    Poi poi = tuple.getPoi();
+                                    int index = tuple.getIndex();
+
+                                    poi.setAddress(address);
+                                    poi.setPhone(phone);
+                                    poi.setUrl(url);
+                                    poi.setWeb(web);
+                                    poi.setRating(rating);
+                                    poi.setPhotos(photos);
+                                    poi.setSchedule(schedule);
+                                    poi.setReviews(reviews);
+                                    poi.setIndex(index);
+
+                                    mPoiList.set(index, poi);
+
+                                    listenerCtx.displayPoiWhenReady();
+
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        },
+                        new Response.ErrorListener() {
+                            @Override
+                            public void onErrorResponse(VolleyError error) {
+                                Toast.makeText(mCtx, "Web Response Error!", Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+        mRequestQueue.add(request);
+    }
+
     // FIND DUPLICATES -----------------------------------------------------------------------------
-    private boolean findPoiByPlaceId(String placeId) {
-        boolean found = false;
-        for (Poi poi : mPoiListPortion) {
-            if (poi.getPlace_id().equals(placeId)) {
-                found = true;
+    private Tuple findPoiByPlaceId(String placeId) {
+
+        int index = 0;
+        Poi found = null;
+        for (Poi poi : mPoiList) {
+            if (poi.getId().equals(placeId)) {
+                found = poi;
                 break;
             }
+            index++;
         }
-        return found;
+        return new Tuple(found, index);
     }
+
+    private class Tuple {                                                                           // used to return two values of different type
+        private Poi poi;                                                                            // used by findPoiByPlaceId()
+        private int index;
+        private Tuple(Poi poi, int index) {
+            this.poi = poi;
+            this.index = index;
+        }
+        public Poi getPoi() {return poi;}
+        public int getIndex() {return index;}
+    };
 
     float getmZoomLevel() {
         return mZoomLevel;
@@ -162,5 +260,9 @@ class Model {
 
     public interface PoisListener {                                                                 // implemented by FragmentList and FragmentMap
         void updatePois(List<Poi> list, boolean loading) throws IOException;
+    }
+
+    public interface PoiDetailListener {                                                                 // implemented by FragmentDetail
+        void displayPoiWhenReady();
     }
 }

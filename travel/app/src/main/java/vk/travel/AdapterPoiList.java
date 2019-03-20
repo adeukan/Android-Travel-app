@@ -21,6 +21,7 @@ import java.util.List;
 
 class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
 
+    private final ActivityMain mActivity;
     // list of POIs
     private List<Poi> mPoiList;
     // ActivityMain context
@@ -33,53 +34,47 @@ class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
 
     AdapterPoiList(Context context, List<Poi> poiList) {
         this.mCtx = context;
+        this.mActivity = (ActivityMain) mCtx;
         this.mPoiList = poiList;
     }
 
-    // CREATE LIST ITEM ----------------------------------------------------------------------------
+    // CREATE LIST ELEMENT -------------------------------------------------------------------------
     @Override
     public AdapterPoiList.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
 
         LayoutInflater inflater = LayoutInflater.from(mCtx);                                    // create inflater
-        View poiView = inflater.inflate(R.layout.list_item, parent, false);              // inflate list items with layout
-        return new ViewHolder(poiView);                                                             // return ViewHolder object to onBindViewHolder() method
-                                                                                                    // it contains list item and references to its views
+        View poiView = inflater.inflate(R.layout.list_item, parent, false);              // inflate element with layout
+        return new ViewHolder(poiView);                                                             // return to onBindViewHolder() wrapped in ViewHolder
+                                                                                                    // ViewHolder contains references to element widgets
     }
 
-    // ADD CONTENT TO LIST ITEM --------------------------------------------------------------------
+    // ADD ELEMENT CONTENT  ------------------------------------------------------------------------
     @Override
-    public void onBindViewHolder(AdapterPoiList.ViewHolder holder, int position) {
+    public void onBindViewHolder(final AdapterPoiList.ViewHolder holder, int position) {
 
-        final Poi poi = mPoiList.get(position);                                                     // get POI for next list item
+        final Poi poi = mPoiList.get(position);                                                     // get the POI for current element
         try {
-            holder.mName.setText(poi.getName());                                                    // attach POI name to list item
-            Bitmap bitmap = ImgCacheManager.getPhotoFromCache(mCtx, poi);                       // try to get POI photo from cache
-            if (bitmap == null) {                                                                   // if not found, start background downloading
-                DownloadPhotoTask asyncTask = new DownloadPhotoTask(holder);                        // new asyncTask needs the item holder
-                asyncTask.execute(poi);                                                             // download poi photo and attach using the holder
+            holder.mName.setText(poi.getName());                                                    // attach POI name to the element
+
+            Bitmap bitmap = ManagerImageCache.getPhotoFromCache(mCtx, poi);                     // try to get POI photo from cache
+            if (bitmap == null) {                                                                   // if not found in cache, download it in background
+                DownloadPhotoTask asyncTask = new DownloadPhotoTask(holder);                        // asyncTask needs holder to attach photo to element
+                asyncTask.execute(poi);                                                             // download POI photo and attach to element
             }
             else                                                                                    // if photo is already in the cache
-                holder.mPhoto.setImageBitmap(bitmap);                                               // attach it to the item using the holder
+                holder.mPhoto.setImageBitmap(bitmap);                                               // attach photo to element
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        holder.mListItem.setOnClickListener(new View.OnClickListener() {                            // set item onclick listener
+        holder.mListItem.setOnClickListener(new View.OnClickListener() {                            // element click handler
             @Override
             public void onClick(View v) {
-                FragmentTransaction ft = ((ActivityMain) mCtx).getSupportFragmentManager().beginTransaction();
-                ft.replace(R.id.fragment_container, new FragmentDetail());
+                mActivity.mPoi = poi;                                                               // save POI for use in FragmentDetail
+                FragmentTransaction ft;
+                ft = mActivity.getSupportFragmentManager().beginTransaction();                      // start transaction
+                ft.replace(R.id.fragment_container, new FragmentDetail());                          // replace fragment
                 ft.commit();
-
-               // Intent intent = new Intent(mCtx, ActivityDetail.class);
-               // // create bundle of values to attach both LAT & LON to intent
-               // Bundle extras = new Bundle();
-               // extras.putFloat(KEY_LAT, poi.getLat());
-               // extras.putFloat(KEY_LON, poi.getLon());
-               // extras.putString(KEY_NAME, poi.getName());
-               // extras.putString(KEY_CATEGORY, poi.getCategory());
-               // intent.putExtras(extras);
-               // mCtx.startActivity(intent);
             }
         });
     }
@@ -138,12 +133,11 @@ class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
             // the method gets arguments as an array
             mPoi = pois[0];
 
-
             // construct URL String to the POI photo on the Web server
-            if(mPoi.getPhotos() != null) {
+            if(mPoi.getTitlePhotos() != null) {
                 try {
                     mPhotoURL = "https://maps.googleapis.com/maps/api/place/photo?maxwidth=300&photoreference="
-                            + mPoi.getPhotos().getJSONObject(0).getString("photo_reference")
+                            + mPoi.getTitlePhotos().getJSONObject(0).getString("photo_reference")
                             + "&key=AIzaSyCZac9ubfqe9Sy-SZCxfZCeNbiDyhv_2hs";
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -182,7 +176,7 @@ class AdapterPoiList extends RecyclerView.Adapter<AdapterPoiList.ViewHolder> {
             mHolder.mPhoto.setImageBitmap(bitmap);
             // store the photo in the cache
             try {
-                ImgCacheManager.putPhotoToCache(mCtx, mPoi, bitmap);
+                ManagerImageCache.putPhotoToCache(mCtx, mPoi, bitmap);
             } catch (JSONException e) {
                 e.printStackTrace();
             }

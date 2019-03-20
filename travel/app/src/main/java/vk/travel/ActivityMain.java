@@ -8,9 +8,13 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
+import com.google.android.gms.maps.model.LatLng;
+
 public class ActivityMain extends AppCompatActivity {
 
     boolean mMapView;
+    Poi mPoi;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +61,7 @@ public class ActivityMain extends AppCompatActivity {
             // case R.id.search:
             //     View searchItem = findViewById(R.id.search);
             //     PopupMenu popupMenu = new PopupMenu(this, searchItem);
-            //     popupMenu.inflate(R.menu.popup_menu);
+            //     popupMenu.inflate(R.menu.xxx_popup_menu);
             //     // popupMenu.show();
             //     return true;
 

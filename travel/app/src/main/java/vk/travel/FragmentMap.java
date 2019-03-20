@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -36,9 +38,10 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.squareup.picasso.Picasso;
+ import com.squareup.picasso.Picasso;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 
 import static android.content.Context.INPUT_METHOD_SERVICE;
@@ -113,7 +116,7 @@ public class FragmentMap extends Fragment
 
         if (servicesOK()) {                                                                         // check GooglePlayServices
             SupportMapFragment mf;
-            mf = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map_main);         // create reference to fragment supporting maps
+            mf = (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);         // create reference to fragment supporting maps
             mf.getMapAsync(this);                                                    // initialize the map in this fragment
 
             // SupportMapFragment mf = new SupportMapFragment();                                    // another way to create a fragment for the map
@@ -143,6 +146,8 @@ public class FragmentMap extends Fragment
                     tvPoiName.setText(marker.getTitle());                                           // add title from the marker
                     String iconURL = marker.getSnippet();                                           // get icon URL from the marker
                     Picasso.get().load(iconURL).into(ivIcon);                                       // attach icon to ImageView using Picasso
+                    // TODO: First touch doesn't show icon
+
                     return view;
                 }
             });
@@ -194,7 +199,7 @@ public class FragmentMap extends Fragment
         searchBox.getText().clear();                                                                // clear searchbox
 
         Geocoder gc = new Geocoder(mActivity);
-        List<Address> addressList = gc.getFromLocationName(searchString, 1);              // use Geocoder to get address from the search string
+        List<Address> addressList = gc.getFromLocationName(searchString, 1);               // use Geocoder to get address from the search string
         Address address = addressList.get(0);
         double lat = address.getLatitude();
         double lng = address.getLongitude();

@@ -12,13 +12,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class ImgCacheManager {
+public class ManagerImageCache {
 
     // try to get a programmer photo from the cache ------------------------------------------------
     public static Bitmap getPhotoFromCache(Context context, Poi poi) throws JSONException {
 
         // get the path to caching directory and construct the full pathname to a desired image file
-        String pathName = context.getCacheDir() + "/" + poi.getPhotos().getJSONObject(0).getString("photo_reference");
+        String pathName = context.getCacheDir() + "/" + poi.getTitlePhotos().getJSONObject(0).getString("photo_reference");
 
         // create a File object with an abstract pathname
         File file = new File(pathName);
@@ -40,7 +40,7 @@ public class ImgCacheManager {
     public static void putPhotoToCache(Context context, Poi poi, Bitmap photoBitmap) throws JSONException {
 
         // get the path to caching directory and construct the full pathname for the file to be saved
-        String pathName = context.getCacheDir() + "/" + poi.getPhotos().getJSONObject(0).getString("photo_reference");
+        String pathName = context.getCacheDir() + "/" + poi.getTitlePhotos().getJSONObject(0).getString("photo_reference");
 
         // create a File object with an abstract pathname
         File file = new File(pathName);

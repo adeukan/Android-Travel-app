@@ -1,8 +1,7 @@
-Activities are replaced by fragments
-
-- Attaching the map to child fragment
-- Standard actionbar replaced by custom toolbar
-- Toolbar contains standard menu items and custom searchbox views
-- Event handling in fragments
-- Event handling of Toolbar menu items inside fragment
-- Changing the state of the map according to the list content
+Details fragment added
+PagerAdapter added to flip through POIs photos
+Poi class is extended with new properties for keeping the additional request results
+Model class is extended by new method requestPoiDetail()
+Transfering data between fragments
+PoiDetailListener interface used to display Poi on the map of Detail fragment when POI info is ready
+Drawer menu xml added, will contain filters on next step
